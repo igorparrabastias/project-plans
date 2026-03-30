@@ -8,6 +8,7 @@ Evolve the agent's memory system to a 3-tier architecture for improved recall, r
 ## System Constraint Analysis
 - **Host:** Google Cloud VM, type `e2-medium` (2 vCPUs, 4 GB RAM).
 - **Primary Concern:** Tier 2 implementation (local semantic search via Ollama) may exceed the available RAM of this instance, leading to performance degradation or failure. This requires careful model selection and testing.
+- **[Update 2026-03-30] Operational RAM Risk:** With QMD installed, a new risk has been identified. QMD's search and reranking functions load a local model into memory, which consumes a significant portion of the available RAM on this instance. While operational, complex search queries could lead to system slowdowns or process termination by the OOM killer. System memory must be monitored, and a swap file is recommended as a mitigation strategy.
 
 ## Proposed Architecture
 
