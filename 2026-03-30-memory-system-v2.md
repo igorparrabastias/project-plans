@@ -14,37 +14,54 @@ Evolve the agent's memory system to a 3-tier architecture for improved recall, r
 ### Tier 1: Working Memory (Human/Agent Layer)
 - **Technology:** Filesystem-based, compatible with Obsidian.
 - **Implementation:**
-    -   Define a directory structure for daily logs, active goals, and short-term scratchpads.
+    -   **[COMPLETED]** Defined a directory structure for daily logs, active goals, and short-term scratchpads.
+    -   Location: `~/.openclaw/workspace/memory/`
+    -   Structure:
+        ```
+        memory/
+        ├── tier1_working/
+        │   ├── daily/
+        │   ├── goals/
+        │   └── scratchpad.md
+        ├── tier2_archive/
+        │   ├── people/
+        │   ├── projects/
+        │   ├── concepts/
+        │   └── procedures/
+        └── tier3_structured/
+        ```
     -   Develop agent skills to read/write to this layer consistently.
     -   This will replace or augment the current `MEMORY.md` for volatile data.
 
 ### Tier 2: Semantic Memory (Long-Term Recall)
-- **Technology:** Ollama + Vector Database.
+- **Technology:** OpenClaw QMD Sidecar.
 - **Implementation:**
-    -   **[INVESTIGATION REQUIRED]** Research and select a lightweight language model from Ollama compatible with the `e2-medium`'s resource constraints.
-    -   **[INVESTIGATION REQUIRED]** Select a lightweight vector store/library (e.g., ChromaDB, FAISS).
-    -   Develop a process to ingest data from Tier 1 and other sources (e.g., historical logs) into the vector store.
-    -   Implement a hybrid search function (vector + keyword) for retrieval.
+    -   The QMD sidecar will be used as the semantic search engine, leveraging its built-in BM25, vector search, and reranking capabilities. This replaces the initial plan for a custom Ollama/vector store solution.
+    -   OpenClaw will be configured to index `tier1_working` and `tier2_archive`.
+    -   A process will be developed to ingest and consolidate data from Tier 1 into the structured `tier2_archive`.
 
 ### Tier 3: Hard Data (Deterministic Storage)
 - **Technology:** SQLite.
 - **Implementation:**
+    -   A SQLite database will be located at `~/.openclaw/workspace/memory/tier3_structured/facts.sqlite`.
     -   Define a schema for storing structured data (e.g., user preferences, project details, credentials).
     -   Create agent skills to perform CRUD operations on the SQLite database.
     -   This will be the source of truth for specific, non-negotiable facts.
 
 ## Core Processes
 
-### "Dream Cycle" (Nightly Maintenance)
-- **Technology:** Cron job executing a shell script.
+### "Dream Cycle" (Periodic Maintenance)
+- **Technology:** Cron job executing agent skills/scripts.
 - **Implementation:**
-    -   Script to archive/summarize Tier 1 logs older than a defined threshold (e.g., 72 hours).
-    -   Script to re-index Tier 2 data if necessary.
-    -   Script to perform SQLite maintenance (`VACUUM`).
+    -   Skill to archive/summarize Tier 1 logs older than a defined threshold (e.g., 72 hours) and move them to Tier 2.
+    -   QMD will handle its own re-indexing automatically.
+    -   Skill/script to perform SQLite maintenance (`VACUUM`).
     -   Clear the active context window for a fresh start.
 
 ## Next Steps
-1.  Confirm the proposed plan and architecture.
-2.  Select a directory for the Tier 1 memory store.
-3.  Begin investigation into a suitable lightweight model for Ollama.
-4.  Define the initial schema for the Tier 3 SQLite database.
+1.  **[COMPLETED]** Confirm the proposed plan and architecture.
+2.  **[COMPLETED]** Select a directory for the Tier 1 memory store.
+3.  **[IN PROGRESS]** Implement the directory structure and OpenClaw configuration for QMD.
+4.  Develop the `Log-To-Tier1` AgentSkill.
+5.  Define the initial schema for the Tier 3 SQLite database.
+6.  Develop the `Consolidate-Tier2` AgentSkill.
