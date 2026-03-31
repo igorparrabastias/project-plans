@@ -15,8 +15,25 @@ Evolve the agent's memory system to a 3-tier architecture for improved recall, r
 ### Tier 1: Working Memory (Human/Agent Layer)
 - **Technology:** Filesystem-based, compatible with Obsidian.
 - **Implementation:**
-    -   **[COMPLETED]** Defined and created the directory structure at `~/.openclaw/workspace/memory/`.
-    -   **[COMPLETED]** Developed the `log_entry` AgentSkill for consistent, timestamped logging to the `daily/` directory.
+    -   **[COMPLETED]** The directory structure and placeholder files (`scratchpad.md`, `goals/current_objectives.md`) have been created at `~/.openclaw/workspace/memory/`.
+    -   **[COMPLETED]** The `log_entry` AgentSkill for logging to the `daily/` directory has been developed.
+    -   *(NOTE: Skills for interacting with `scratchpad.md` and `goals/current_objectives.md` are not yet implemented.)*
+    -   **Structure:**
+        ```
+        memory/
+        ├── tier1_working/
+        │   ├── daily/
+        │   ├── goals/
+        │   │   └── current_objectives.md
+        │   └── scratchpad.md
+        ├── tier2_archive/
+        │   ├── people/
+        │   ├── projects/
+        │   ├── concepts/
+        │   └── procedures/
+        └── tier3_structured/
+        ```
+
 
 ### Tier 2: Semantic Memory (Long-Term Recall)
 - **Technology:** OpenClaw QMD Sidecar.
