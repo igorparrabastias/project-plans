@@ -1,4 +1,4 @@
-# Plan: 3-Tier Memory Architecture Enhancement
+# Plan: 3-Tier Memory Architecture Enhancement (Completed)
 
 Based on the principles outlined in the referenced video (https://www.youtube.com/watch?v=LHoB1C2H3f0).
 
@@ -7,62 +7,48 @@ Evolve the agent's memory system to a 3-tier architecture for improved recall, r
 
 ## System Constraint Analysis
 - **Host:** Google Cloud VM, type `e2-medium` (2 vCPUs, 4 GB RAM).
-- **Primary Concern:** Tier 2 implementation (local semantic search via Ollama) may exceed the available RAM of this instance, leading to performance degradation or failure. This requires careful model selection and testing.
-- **[Update 2026-03-30] Operational RAM Risk:** With QMD installed, a new risk has been identified. QMD's search and reranking functions load a local model into memory, which consumes a significant portion of the available RAM on this instance. While operational, complex search queries could lead to system slowdowns or process termination by the OOM killer. System memory must be monitored, and a swap file is recommended as a mitigation strategy.
+- **Primary Concern:** **[Mitigated]** The initial concern about memory usage for a local model was mitigated by using the QMD sidecar which relies on API calls for heavy processing.
+- **[Update 2026-03-30] Operational RAM Risk:** With QMD installed, a new risk was identified. QMD's search and reranking functions can be memory intensive. More critically, the sub-agent process for consolidation consumes memory. This requires monitoring, and a swap file is recommended as a mitigation strategy.
 
-## Proposed Architecture
+## Implemented Architecture
 
 ### Tier 1: Working Memory (Human/Agent Layer)
 - **Technology:** Filesystem-based, compatible with Obsidian.
 - **Implementation:**
-    -   **[COMPLETED]** Defined a directory structure for daily logs, active goals, and short-term scratchpads.
-    -   Location: `~/.openclaw/workspace/memory/`
-    -   Structure:
-        ```
-        memory/
-        ├── tier1_working/
-        │   ├── daily/
-        │   ├── goals/
-        │   └── scratchpad.md
-        ├── tier2_archive/
-        │   ├── people/
-        │   ├── projects/
-        │   ├── concepts/
-        │   └── procedures/
-        └── tier3_structured/
-        ```
-    -   Develop agent skills to read/write to this layer consistently.
-    -   This will replace or augment the current `MEMORY.md` for volatile data.
+    -   **[COMPLETED]** Defined and created the directory structure at `~/.openclaw/workspace/memory/`.
+    -   **[COMPLETED]** Developed the `log_entry` AgentSkill for consistent, timestamped logging to the `daily/` directory.
 
 ### Tier 2: Semantic Memory (Long-Term Recall)
 - **Technology:** OpenClaw QMD Sidecar.
 - **Implementation:**
-    -   The QMD sidecar will be used as the semantic search engine, leveraging its built-in BM25, vector search, and reranking capabilities. This replaces the initial plan for a custom Ollama/vector store solution.
-    -   OpenClaw will be configured to index `tier1_working` and `tier2_archive`.
-    -   A process will be developed to ingest and consolidate data from Tier 1 into the structured `tier2_archive`.
+    -   **[COMPLETED]** Successfully installed and configured the QMD sidecar to index both Tier 1 and Tier 2 directories.
+    -   **[COMPLETED]** The initial installation via `bun` failed due to memory constraints; this was resolved by installing via `npm`.
 
 ### Tier 3: Hard Data (Deterministic Storage)
 - **Technology:** SQLite.
 - **Implementation:**
-    -   A SQLite database will be located at `~/.openclaw/workspace/memory/tier3_structured/facts.sqlite`.
-    -   Define a schema for storing structured data (e.g., user preferences, project details, credentials).
-    -   Create agent skills to perform CRUD operations on the SQLite database.
-    -   This will be the source of truth for specific, non-negotiable facts.
+    -   **[PENDING]** The database will be located at `~/.openclaw/workspace/memory/tier3_structured/facts.sqlite`.
+    -   Defining the schema is the next pending task.
 
 ## Core Processes
 
 ### "Dream Cycle" (Periodic Maintenance)
-- **Technology:** Cron job executing agent skills/scripts.
+- **Technology:** Cron job executing a custom Node.js AgentSkill.
 - **Implementation:**
-    -   Skill to archive/summarize Tier 1 logs older than a defined threshold (e.g., 72 hours) and move them to Tier 2.
-    -   QMD will handle its own re-indexing automatically.
-    -   Skill/script to perform SQLite maintenance (`VACUUM`).
-    -   Clear the active context window for a fresh start.
+    -   **[COMPLETED]** Developed the `consolidate_memory` AgentSkill.
+    -   The skill is implemented in Node.js for robust JSON parsing and error handling.
+    -   It uses a **batched approach**, processing all eligible log files in a single, efficient API call to a sub-agent to minimize overhead.
+    -   **[COMPLETED]** A cron job is scheduled to run this skill nightly at 03:00 local time (America/Santiago).
 
-## Next Steps
+## Project Status
 1.  **[COMPLETED]** Confirm the proposed plan and architecture.
-2.  **[COMPLETED]** Select a directory for the Tier 1 memory store.
-3.  **[IN PROGRESS]** Implement the directory structure and OpenClaw configuration for QMD.
-4.  Develop the `Log-To-Tier1` AgentSkill.
-5.  Define the initial schema for the Tier 3 SQLite database.
-6.  Develop the `Consolidate-Tier2` AgentSkill.
+2.  **[COMPLETED]** Select and create the Tier 1 memory store directory structure.
+3.  **[COMPLETED]** Implement OpenClaw configuration for QMD.
+4.  **[COMPLETED]** Develop the `log_entry` AgentSkill.
+5.  **[COMPLETED]** Develop the `consolidate_memory` AgentSkill.
+6.  **[COMPLETED]** Optimize the `consolidate_memory` skill for batched processing.
+7.  **[COMPLETED]** Schedule the nightly consolidation cron job.
+
+## Next Step
+1.  Define the initial schema for the Tier 3 SQLite database.
+
